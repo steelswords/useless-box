@@ -45,15 +45,18 @@ void extendArm()
 void retractArm()
 {
   arm.writeMicroseconds(armRetractedUsValue);
-  Serial.println("Writing " + String(armRetractedUsValue) + " to arm");
 }
 
 void handleSwitch()
 {
+  static int numTimesCalled;
   if (isSwitchOn())
-    Serial.println("Close that lid!");
+    Serial.println("Close that lid! " + String(numTimesCalled++));
   else
+  {
     Serial.println("Done");
+    numTimesCalled++;
+  }
   delay(50);
 }
 
@@ -70,7 +73,7 @@ void setup()
 
   // Set up the ISR for the button
   // TODO: Redo
-  //attachInterrupt(digitalPinToInterrupt(inputOnSwitchPin), handleSwitch, CHANGE);
+  attachInterrupt(digitalPinToInterrupt(inputOnSwitchPin), handleSwitch, CHANGE);
 }
 
 void printState()
@@ -79,20 +82,19 @@ void printState()
   Serial.println("isSwitchOverextended() = " + String(isSwitchOverextended()));
 }
 
-
 void loop()
 {
 // Polling method
 #if 1
-  printState();
+  //printState();
   while (isSwitchOn())
   {
-    Serial.println("Closing that **** switch!");
+    //Serial.println("Closing that **** switch!");
     openLidFully();
     delay(400); // For sassiness
     extendArm();
   }
-  Serial.println("Done!");
+  //Serial.println("Done!");
   delay(100);
   retractArm();
   delay(delayLidCloseMs);
