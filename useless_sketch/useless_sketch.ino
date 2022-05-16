@@ -8,7 +8,7 @@ const int SWITCH_ACTIVATED = HIGH;
 
 const int lidClosedUsValue = 2300;
 const int lidOpenedUsValue = 1550;
-const int armExtendedUsValue = 2080;
+const int armExtendedUsValue = 2000;
 const int armRetractedUsValue = 400;
 
 const int delayLidCloseMs = 200;
