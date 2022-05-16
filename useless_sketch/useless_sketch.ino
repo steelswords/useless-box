@@ -1,19 +1,17 @@
 #include <Servo.h>
 
-//const int servoArmPin = A6;
-//const int servoArmPin = A7;
-const int servoArmPin = 5;
-//const int servoLidOpenerPin = A6;
-const int servoLidOpenerPin = 3;
-const int inputTooFarSwitchPin = 2;
-const int inputOnSwitchPin = 7;
-const int SWITCH_ACTIVATED = LOW;
-
+const int servoArmPin = 3;
+const int servoLidOpenerPin = 5;
+const int inputTooFarSwitchPin = 7;
+const int inputOnSwitchPin = 2;
+const int SWITCH_ACTIVATED = HIGH;
 
 const int lidClosedUsValue = 2300;
 const int lidOpenedUsValue = 1550;
 const int armExtendedUsValue = 2080;
-const int armRetractedUsValue = 600;
+const int armRetractedUsValue = 400;
+
+const int delayLidCloseMs = 200;
 
 Servo arm;
 Servo lidOpener;
@@ -30,15 +28,35 @@ inline bool isSwitchOverextended()
 
 void openLidFully()
 {
-  lidOpener.writeMicroseconds(1500);
+  lidOpener.writeMicroseconds(lidOpenedUsValue);
 }
 
+void closeLidFully()
+{
+  lidOpener.writeMicroseconds(lidClosedUsValue);
+}
 
 // Turns off switch
 void extendArm()
 {
-  arm.writeMicroseconds(1500);
+  arm.writeMicroseconds(armExtendedUsValue);
 }
+
+void retractArm()
+{
+  arm.writeMicroseconds(armRetractedUsValue);
+  Serial.println("Writing " + String(armRetractedUsValue) + " to arm");
+}
+
+void handleSwitch()
+{
+  if (isSwitchOn())
+    Serial.println("Close that lid!");
+  else
+    Serial.println("Done");
+  delay(50);
+}
+
 
 void setup()
 {
@@ -46,25 +64,43 @@ void setup()
   pinMode(inputOnSwitchPin, INPUT);
   pinMode(inputTooFarSwitchPin, INPUT);
   arm.attach(servoArmPin);
-  //arm.attach(D8);
   lidOpener.attach(servoLidOpenerPin);
+  closeLidFully();
+  retractArm();
 
   // Set up the ISR for the button
   // TODO: Redo
-  attachInterrupt(digitalPinToInterrupt(inputOnSwitchPin), handleSwitch, CHANGE);
+  //attachInterrupt(digitalPinToInterrupt(inputOnSwitchPin), handleSwitch, CHANGE);
 }
 
-void handleSwitch()
+void printState()
 {
-  bool isSwitchOn = (digitalRead(inputOnSwitchPin) == SWITCH_ACTIVATED);
-  if (isSwitchOn)
-    Serial.println("Close that lid!");
-  else
-    Serial.println("Done");
+  Serial.println("isSwitchOn() = " + String(isSwitchOn()));
+  Serial.println("isSwitchOverextended() = " + String(isSwitchOverextended()));
 }
+
 
 void loop()
 {
+// Polling method
+#if 1
+  printState();
+  while (isSwitchOn())
+  {
+    Serial.println("Closing that **** switch!");
+    openLidFully();
+    delay(400); // For sassiness
+    extendArm();
+  }
+  Serial.println("Done!");
+  delay(100);
+  retractArm();
+  delay(delayLidCloseMs);
+  closeLidFully();
+#endif
+
+// For calibrating servo values
+#if 0
   int writeValue = Serial.parseInt();
   if (0 != writeValue)
   {
@@ -72,36 +108,5 @@ void loop()
     lidOpener.writeMicroseconds(writeValue);
     arm.writeMicroseconds(writeValue);
   }
-#if 0
-  while (isSwitchOn())
-  {
-    openLid();
-    extendArm();
-  }
-  #endif
-  
-
-  //Serial.println("Button: " + String(digitalRead(inputCloseSwitchPin)));
-
-#if 0
-  Serial.println("Looping...");
-  Serial.println("1500");
-  arm.writeMicroseconds(1500);
-  delay(1000);
-  Serial.println("2800");
-  Serial.println("Button: " + String(digitalRead(inputCloseSwitchPin)));
-  arm.writeMicroseconds(2800);
-  delay(1000);
-  #endif
-  #if 0
-  //arm.write(0);
-  //lidOpener.write(0);
-  delay(1000);
-  arm.write(90);
-  lidOpener.write(90);
-  delay(1000);
-  arm.write(180);
-  lidOpener.write(180);
-  delay(1000);
-  #endif
+#endif
 }
